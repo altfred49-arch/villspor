@@ -24,7 +24,7 @@ Gå deretter til `http://127.0.0.1:8770`.
 
 Snakk med Bestemor Tora, finn naturvesenene i skogen, fang minst to, åpne fjellporten og stans Flammefyrsten.
 
-Tre valgfrie glødespor er gjemt i skogen og hulen. De gir erfaring, flere villbær og et sterkere Roglass. Villbær kan brukes til taktisk helbredelse i kamp. Minikartet viser veien østover mot fjellets hjerte.
+Tre valgfrie glødespor er gjemt i skogen og hulen. De gir erfaring, flere villbær og et sterkere Roglass. Villbær kan brukes til taktisk helbredelse i kamp. Minikartet viser veien østover mot fjellets hjerte. Nye venner utover flokken på tre venter i leirreserven og kan byttes inn fra flokkspanelet.
 
 ## Teknikk
 
