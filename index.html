@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#142c2b">
+  <meta name="description" content="Villspor – et originalt monsterfangst-eventyr med Ninni, naturvesener og Flammefyrsten.">
+  <title>Villspor – Ninnis hemmelige verden</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="app">
+    <header id="topbar">
+      <div><strong>VILLSPOR</strong><span id="areaLabel">Furuly Camping</span></div>
+      <div id="questShort">Snakk med Bestemor Tora</div>
+      <button id="soundBtn" class="icon-btn" aria-label="Lyd av eller på">🔊</button>
+    </header>
+
+    <section id="gameWrap" aria-label="Spillområde">
+      <canvas id="game" width="960" height="540" aria-label="Villspor spillverden"></canvas>
+      <div id="toast" role="status" aria-live="polite"></div>
+
+      <section id="titleScreen" class="panel-screen visible">
+        <div class="hero-mark">🐾</div>
+        <h1>VILLSPOR</h1>
+        <p class="subtitle">Ninnis hemmelige verden</p>
+        <p>Da Flammefyrsten våknet under fjellet, begynte naturvesenene å flykte. Bare Ninni kan finne sporene deres.</p>
+        <button id="newGameBtn" class="primary">START EVENTYRET</button>
+        <button id="continueBtn" class="secondary hidden">FORTSETT</button>
+        <p class="small">Originalt norsk monsterfangst-RPG · Fremdrift lagres på denne enheten</p>
+      </section>
+
+      <section id="dialog" class="dialog hidden" aria-live="polite">
+        <div id="portrait">👵</div>
+        <div><strong id="speaker">Bestemor Tora</strong><p id="dialogText"></p><span>Trykk A / Enter</span></div>
+      </section>
+
+      <section id="battleUI" class="battle-ui hidden" aria-label="Kampmeny">
+        <div id="battleStatus" class="battle-status"></div>
+        <div id="battleLog" aria-live="polite">Et vilt vesen viser seg!</div>
+        <div id="battleActions" class="battle-actions">
+          <button id="move1Btn"></button>
+          <button id="move2Btn"></button>
+          <button id="captureBtn">🧿 ROGLAS</button>
+          <button id="switchBtn">↻ BYTT</button>
+        </div>
+      </section>
+
+      <section id="teamPanel" class="side-panel hidden">
+        <div class="panel-head"><h2>Flokken din</h2><button data-close="teamPanel">×</button></div>
+        <div id="teamList"></div>
+        <div class="stats-row"><span>Oppdaget <b id="seenCount">0</b>/7</span><span>Fanget <b id="caughtCount">0</b>/6</span></div>
+        <button id="saveBtn" class="secondary">LAGRE NÅ</button>
+      </section>
+
+      <section id="questPanel" class="side-panel hidden">
+        <div class="panel-head"><h2>Reisedagbok</h2><button data-close="questPanel">×</button></div>
+        <div id="questList"></div>
+        <h3>Kontroller</h3>
+        <p>Flytt: piltaster / WASD<br>Samhandle: Enter / E / A-knappen<br>Flokk: F · Pause: P / Esc</p>
+      </section>
+
+      <section id="ending" class="panel-screen hidden">
+        <div class="hero-mark">🔥🐾🌲</div>
+        <h2>FJELLET PUSTER IGJEN</h2>
+        <p id="endingText"></p>
+        <div id="endingStats"></div>
+        <button id="keepPlayingBtn" class="primary">FORTSETT Å UTFORSKE</button>
+        <button id="restartBtn" class="secondary">NYTT EVENTYR</button>
+      </section>
+
+      <section id="pauseScreen" class="panel-screen hidden compact">
+        <h2>PAUSE</h2><p>Ninni venter tålmodig.</p>
+        <button id="resumeBtn" class="primary">FORTSETT</button>
+      </section>
+    </section>
+
+    <nav id="mobileControls" aria-label="Berøringskontroller">
+      <div class="dpad">
+        <button data-dir="up" aria-label="Opp">▲</button>
+        <button data-dir="left" aria-label="Venstre">◀</button>
+        <button data-dir="down" aria-label="Ned">▼</button>
+        <button data-dir="right" aria-label="Høyre">▶</button>
+      </div>
+      <div class="action-pad">
+        <button id="mobileQuest" class="mini">📖</button>
+        <button id="mobileTeam" class="mini">🐾</button>
+        <button id="actionBtn" class="action">A</button>
+      </div>
+    </nav>
+
+    <footer><span>Flytt: WASD / piler</span><span>Samhandle: E / Enter</span><span>Flokk: F</span><span>Pause: P</span></footer>
+  </main>
+  <script src="game-core.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

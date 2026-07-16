@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url);
+const core=require('./game-core.js');
+const html=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
+const game=fs.readFileSync(new URL('./game.js',import.meta.url),'utf8');
+const css=fs.readFileSync(new URL('./styles.css',import.meta.url),'utf8');
+const tests=[];
+const test=(name,fn)=>tests.push([name,fn]);
+
+test('datamodellen har seks fangbare originalvesener og én boss',()=>{assert.deepEqual(core.validateData(),[]);assert.equal(Object.values(core.CREATURES).filter(c=>!c.boss).length,6);assert.equal(Object.values(core.CREATURES).filter(c=>c.boss).length,1);});
+test('alle vesener har gyldig type og minst to angrep',()=>{for(const c of Object.values(core.CREATURES)){assert.ok(core.TYPES[c.type]);assert.ok(c.moves.length>=2);c.moves.forEach(m=>assert.ok(core.MOVES[m]));}});
+test('typesirkelen er ild > vekst > vann > ild',()=>{assert.equal(core.typeMultiplier('ILD','VEKST'),1.5);assert.equal(core.typeMultiplier('VEKST','VANN'),1.5);assert.equal(core.typeMultiplier('VANN','ILD'),1.5);assert.equal(core.typeMultiplier('ILD','VANN'),.67);});
+test('kamp gir skade og kan ende i seier',()=>{const a=core.makeCreature('bekkskvett',2),d=core.makeCreature('gnistrev',1);const r=core.applyMove(a,d,'fossedunk',1);assert.ok(r.damage>0);assert.equal(r.mult,1.5);while(d.hp>0)core.applyMove(a,d,'fossedunk',1);assert.equal(d.hp,0);});
+test('statusangrep helbreder, beskytter og svekker',()=>{const a=core.makeCreature('mosemurr',2),d=core.makeCreature('bekkskvett',2);a.hp-=12;core.applyMove(a,d,'sporevind',1);assert.ok(a.hp>a.maxHp-12);core.applyMove(d,a,'duggslor',1);assert.ok(d.status.guard>0);core.applyMove(core.makeCreature('gnistrev',2),d,'askesnurr',1);assert.ok(d.status.weaken>0);});
+test('fangstsjanse øker når motstanderen svekkes og boss kan ikke fanges',()=>{const u=core.makeCreature('kongleklo',1);const full=core.captureChance(u);u.hp=1;assert.ok(core.captureChance(u)>full);assert.equal(core.captureChance(core.makeCreature('flammefyrsten',4)),0);assert.equal(core.canCapture(u,0),true);});
+test('erfaring gir nivå og høyere egenskaper',()=>{const u=core.makeCreature('mosemurr',1),old=u.maxHp;const levels=core.gainXp(u,100);assert.ok(levels.length>=1);assert.ok(u.level>1);assert.ok(u.maxHp>old);});
+test('HTML inneholder alle sentrale spillflater og mobilkontroller',()=>{for(const id of ['game','titleScreen','dialog','battleUI','teamPanel','questPanel','ending','mobileControls','actionBtn'])assert.match(html,new RegExp(`id="${id}"`));assert.match(css,/pointer:coarse/);assert.match(css,/image-rendering:pixelated/);});
+test('verden inneholder campingplass, skog og hule',()=>{for(const token of ['FURULY CAMPING','HVISKESKOGEN','GLØDESTEINSHULEN','areaAt'])assert.ok(game.includes(token));});
+test('Ninni er synlig følgesvenn med følgebevegelse',()=>{for(const token of ['drawNinni','game.ninni','game.trail'])assert.ok(game.includes(token));});
+test('kamp, fangst, lag på tre, bytting, seier og tap er implementert',()=>{for(const token of ['startBattle','attemptCapture','game.team.length<3','switchUnit','winBattle','loseBattle'])assert.ok(game.includes(token));});
+test('historie, NPC-er, veiledning, boss og avslutning er implementert',()=>{for(const token of ['Bestemor Tora','Skogvokter Siv','Flammefyrsten','finishGame','Roglasset'])assert.ok(game.includes(token));});
+test('lokal lagring, beste tid, lyd og debug-API finnes',()=>{for(const token of ['localStorage.setItem','BEST_KEY','AudioContext','VillsporDebug'])assert.ok(game.includes(token));});
+test('JavaScript-filene kan parses',()=>{new vm.Script(fs.readFileSync('./game-core.js','utf8'));new vm.Script(game);});
+
+let passed=0;
+for(const [name,fn] of tests){try{await fn();passed++;console.log(`✓ ${name}`);}catch(err){console.error(`✗ ${name}\n  ${err.stack||err}`);process.exitCode=1;}}
+console.log(`\n${passed}/${tests.length} tester bestått`);
+if(passed!==tests.length)process.exit(1);

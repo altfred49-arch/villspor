@@ -1,0 +1,147 @@
+(()=>{
+'use strict';
+const C=window.VillsporCore;
+const $=id=>document.getElementById(id);
+const canvas=$('game'),ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;
+const TILE=32,WORLD={w:42,h:28};
+const SAVE_KEY='villspor-save-v1',BEST_KEY='villspor-best-v1';
+const encounters={forest:['gnistrev','mosemurr','bekkskvett','kongleklo','fjordfnugg'],cave:['kullvinge','gnistrev','bekkskvett']};
+const keys=new Set();
+let raf=0,last=0,toastTimer=0,audioCtx=null;
+
+const fresh=()=>({
+ mode:'title',started:false,paused:false,player:{x:6*TILE,y:14*TILE,dir:'down',speed:142},trail:[],ninni:{x:5.5*TILE,y:14.5*TILE},camera:{x:0,y:0},
+ team:[],seen:[],caught:[],quest:0,bossDefeated:false,dialogs:{tora:false,loke:false,siv:false},
+ moved:0,encounterCooldown:100,startTime:0,elapsed:0,best:Number(localStorage.getItem(BEST_KEY)||0),battle:null,message:'',sound:true,lastSave:0
+});
+let game=fresh();
+
+const NPCS=[
+ {id:'tora',name:'Bestemor Tora',x:7*TILE,y:11*TILE,icon:'👵',color:'#a45248'},
+ {id:'loke',name:'Loke',x:12*TILE,y:18*TILE,icon:'🧒',color:'#4c78a8'},
+ {id:'siv',name:'Skogvokter Siv',x:23*TILE,y:9*TILE,icon:'🧭',color:'#5f8152'}
+];
+const PROPS=[
+ {kind:'tent',x:3,y:6},{kind:'tent',x:10,y:7},{kind:'camper',x:4,y:19},{kind:'fire',x:9,y:18},
+ {kind:'sign',x:13,y:14},{kind:'stone',x:31,y:8},{kind:'stone',x:35,y:19},{kind:'crystal',x:37,y:10}
+];
+
+function saveGame(show=false){if(!game.started)return;game.elapsed=elapsedSeconds();const data={player:game.player,team:game.team,seen:game.seen,caught:game.caught,quest:game.quest,bossDefeated:game.bossDefeated,dialogs:game.dialogs,elapsed:game.elapsed,best:game.best,sound:game.sound};localStorage.setItem(SAVE_KEY,JSON.stringify(data));game.lastSave=performance.now();if(show)toast('Eventyret er lagret ✓');}
+function hasSave(){try{return!!JSON.parse(localStorage.getItem(SAVE_KEY)||'null');}catch{return false;}}
+function loadGame(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');if(!d)return false;game=fresh();Object.assign(game,d,{started:true,mode:'world',battle:null,startTime:Date.now()-(d.elapsed||0)*1000});game.player={...fresh().player,...d.player};game.team=(d.team||[]).map(u=>({...u,status:u.status||{guard:0,weaken:0}}));game.trail=[];game.ninni={x:game.player.x-20,y:game.player.y+12};updatePanels();return true;}catch(e){console.warn('Kunne ikke laste lagring',e);return false;}}
+function resetGame(){localStorage.removeItem(SAVE_KEY);game=fresh();startNew();}
+function startNew(){game=fresh();game.started=true;game.mode='world';game.startTime=Date.now();game.team=[C.makeCreature('mosemurr',1)];game.seen=['mosemurr'];game.caught=['mosemurr'];hide('titleScreen');showDialog('Bestemor Tora','Ninni fant dette lille Mosemurr-vesenet under bobilen i natt. Noe har skremt naturåndene ut av skogen …','👵',()=>showDialog('Bestemor Tora','Gå østover. Bli venn med minst to forskjellige vesener, så kan dere åpne fjellporten. Roglasset fanger bare et svekket vesen.','👵',()=>{game.quest=1;game.dialogs.tora=true;updatePanels();saveGame();toast('Nytt mål: Fang minst to ulike villvesener');}));updatePanels();tone(330,.08);}
+function elapsedSeconds(){return game.startTime?Math.floor((Date.now()-game.startTime)/1000):game.elapsed||0;}
+
+function show(id){const el=$(id);el.classList.remove('hidden');if(el.classList.contains('panel-screen'))el.classList.add('visible');}
+function hide(id){$(id).classList.add('hidden');$(id).classList.remove('visible');}
+function visible(id){return!$(id).classList.contains('hidden')||$(id).classList.contains('visible');}
+function toast(text,ms=2200){$('toast').textContent=text;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),ms);}
+function tone(freq=440,dur=.09,type='square',vol=.035){if(!game.sound)return;try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+dur);}catch{}}
+function fanfare(){[392,523,659,784].forEach((n,i)=>setTimeout(()=>tone(n,.18,'square',.05),i*120));}
+
+let dialogDone=null;
+function showDialog(speaker,text,portrait='💬',done=null){game.mode='dialog';$('speaker').textContent=speaker;$('dialogText').textContent=text;$('portrait').textContent=portrait;dialogDone=done;show('dialog');tone(260,.04,'square',.018);}
+function advanceDialog(){if(game.mode!=='dialog')return;hide('dialog');const cb=dialogDone;dialogDone=null;game.mode='world';if(cb)setTimeout(cb,30);}
+
+function updatePanels(){
+ const area=areaAt(game.player.x);$('areaLabel').textContent=area==='camp'?'Furuly Camping':area==='forest'?'Hviskeskogen':'Glødesteinshulen';
+ const caughtWild=Math.max(0,game.caught.length-1);
+ const questText=game.quest===0?'Snakk med Bestemor Tora':game.quest===1?`Fang villvesener (${Math.min(caughtWild,2)}/2)`:game.quest===2?'Finn Flammefyrsten i hulen':game.quest===3?'Fjellet er reddet!':'Utforsk Villspor';
+ $('questShort').textContent=questText;
+ $('seenCount').textContent=game.seen.length;$('caughtCount').textContent=game.caught.filter(id=>id!=='flammefyrsten').length;
+ $('teamList').innerHTML=game.team.map((u,i)=>{const c=C.CREATURES[u.id];return`<div class="creature-card"><div class="creature-icon" style="background:${c.colors[2]}">${C.TYPES[c.type].icon}</div><div><b>${c.name}</b> · Lv.${u.level}<small>${c.bio}</small><div class="hpbar"><i style="width:${100*u.hp/u.maxHp}%"></i></div><small>${u.hp}/${u.maxHp} HP · ${u.xp}/${C.xpNeeded(u.level)} XP</small></div><span class="type type-${c.type.toLowerCase()}">${c.type}</span></div>`}).join('')||'<p>Ingen vesener i flokken.</p>';
+ const quests=[['Møt Bestemor Tora',game.quest>0],['Bli venn med to villvesener',caughtWild>=2],['Åpne fjellporten',game.quest>=2],['Stans Flammefyrsten',game.bossDefeated]];
+ $('questList').innerHTML=quests.map(([q,d],i)=>`<div class="quest ${d?'done':(!d&&quests.slice(0,i).every(x=>x[1])?'active':'')}">${d?'✓':'○'} ${q}</div>`).join('');
+}
+function openPanel(id){if(game.mode!=='world')return;hide('teamPanel');hide('questPanel');show(id);game.mode='panel';tone(520,.05);}
+function closePanels(){hide('teamPanel');hide('questPanel');if(game.mode==='panel')game.mode='world';}
+
+function hash(x,y){let h=(x*374761393+y*668265263)^0x5bd1e995;h=(h^(h>>13))*1274126177;return(h^(h>>16))>>>0;}
+function areaAt(px){const tx=px/TILE;return tx<14?'camp':tx<29?'forest':'cave';}
+function blocked(px,py){const x=Math.floor(px/TILE),y=Math.floor(py/TILE);if(x<1||y<1||x>=WORLD.w-1||y>=WORLD.h-1)return true;
+ if(x===29&&y>=1&&y<=26&&!(y>=13&&y<=15))return true;
+ if(x>=14&&x<29){const path=y>=13&&y<=15;const clear=(x>20&&x<25&&y>7&&y<12);if(!path&&!clear&&hash(x,y)%5===0)return true;}
+ if(x>=30){if(y<6||y>22)return true;if((y===7||y===21)&&x>31&&hash(x,y)%2===0)return true;}
+ if(x<14){if((x===2||x===11)&&y>4&&y<10)return true;}
+ for(const p of PROPS){if(['tent','camper','stone'].includes(p.kind)&&Math.abs(px-(p.x+.5)*TILE)<22&&Math.abs(py-(p.y+.5)*TILE)<19)return true;}
+ return false;
+}
+function tryMove(dx,dy,dt){if(game.mode!=='world')return;const p=game.player,dist=p.speed*dt;let nx=p.x+dx*dist,ny=p.y+dy*dist;const r=10;
+ if(!blocked(nx-r,p.y)&&!blocked(nx+r,p.y))p.x=nx;if(!blocked(p.x,ny-r)&&!blocked(p.x,ny+r))p.y=ny;
+ if(dx||dy){p.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up');game.trail.push({x:p.x,y:p.y});if(game.trail.length>18)game.trail.shift();const old={x:game.ninni.x,y:game.ninni.y};const target=game.trail[Math.max(0,game.trail.length-13)];if(target){game.ninni.x+=(target.x-game.ninni.x)*Math.min(1,dt*8);game.ninni.y+=(target.y-game.ninni.y)*Math.min(1,dt*8);}const moved=Math.hypot(p.x-old.x,p.y-old.y);game.moved+=dist;game.encounterCooldown-=dist;checkAreaGate();if(game.encounterCooldown<=0)maybeEncounter();}
+}
+function checkAreaGate(){if(game.player.x>28.7*TILE&&game.caught.length-1<2){game.player.x=28.55*TILE;showDialog('Ninni','Voff! Fjellporten svarer ikke ennå. Vi trenger vennskapet til minst to villvesener.','🐶');}
+ if(game.player.x>29.2*TILE&&game.quest<2&&game.caught.length-1>=2){game.quest=2;toast('Fjellporten åpnet seg!');fanfare();updatePanels();saveGame();}
+}
+function maybeEncounter(){game.encounterCooldown=85+Math.random()*70;const area=areaAt(game.player.x);if(!encounters[area]||Math.random()>.38||game.mode!=='world')return;const pool=encounters[area];const id=pool[Math.floor(Math.random()*pool.length)];startBattle(id,Math.min(4,1+Math.floor((game.caught.length-1)/2)),false);}
+function nearestNPC(){let best=null,bd=58;for(const n of NPCS){const d=Math.hypot(game.player.x-n.x,game.player.y-n.y);if(d<bd){best=n;bd=d;}}return best;}
+function interact(){if(game.mode==='dialog')return advanceDialog();if(game.mode==='battle'||game.mode==='ending')return;if(game.mode==='panel')return closePanels();if(game.mode!=='world')return;
+ const n=nearestNPC();if(n){talkNPC(n);return;}
+ const fire=PROPS.find(p=>p.kind==='fire');if(Math.hypot(game.player.x-(fire.x+.5)*TILE,game.player.y-(fire.y+.5)*TILE)<62){healTeam();showDialog('Leirbålet','Flokken hviler ved varmen. Alle får full energi.','🔥',()=>saveGame(true));return;}
+ if(game.player.x>36*TILE&&game.player.y>9*TILE&&game.player.y<19*TILE&&!game.bossDefeated){if(game.caught.length-1<2){toast('Flammefyrsten er for mektig. Finn flere venner først.');return;}startBattle('flammefyrsten',4,true);return;}
+ toast('Ninni snuser etter spor …');tone(700,.04);
+}
+function talkNPC(n){if(n.id==='tora'){showDialog(n.name,game.quest===0?'Ninni fant Mosemurr ved bobilen. Ta vare på hverandre og følg sporene østover.':game.bossDefeated?'Dere stilnet fjellets sinne. Jeg visste Ninni hadde nese for eventyr!':'Roglasset virker best når vesenet har lite energi igjen. Leirbålet helbreder hele flokken.',n.icon);}
+ if(n.id==='loke')showDialog(n.name,game.dialogs.loke?'Jeg så et blått fjordfnugg mellom tretoppene!':'Hør! Skogen lager sin egen melodi. Trykk F for å se flokken din.',n.icon,()=>{game.dialogs.loke=true;saveGame();});
+ if(n.id==='siv')showDialog(n.name,game.caught.length-1>=2?'Dere har vunnet skogens tillit. Fjellporten vil kjenne igjen sporene deres.':'Ild slår vekst, vekst slår vann, og vann slår ild. Ingen type er alltid sterkest.',n.icon,()=>{game.dialogs.siv=true;saveGame();});
+}
+function healTeam(){for(const u of game.team)u.hp=u.maxHp;updatePanels();tone(523,.12,'sine');}
+
+function startBattle(id,level=1,boss=false){if(game.mode==='battle')return;const enemy=C.makeCreature(id,level);game.seen=[...new Set([...game.seen,id])];game.battle={enemy,active:Math.max(0,game.team.findIndex(u=>u.hp>0)),boss:boss||!!C.CREATURES[id].boss,locked:false,round:0,log:`${boss?'Fjellet rister! ':'Et vilt '}${C.CREATURES[id].name} viser seg!`};game.mode='battle';show('battleUI');closePanels();renderBattleUI();tone(boss?110:220,.25,'sawtooth',.05);updatePanels();}
+function renderBattleUI(){const b=game.battle;if(!b)return;const p=game.team[b.active],e=b.enemy,pc=C.CREATURES[p.id],ec=C.CREATURES[e.id];$('battleStatus').innerHTML=`<div><b>${pc.name}</b> Lv.${p.level}<div class="hpbar"><i style="width:${100*p.hp/p.maxHp}%"></i></div>${p.hp}/${p.maxHp} HP</div><div><b>${ec.name}</b> Lv.${e.level}<div class="hpbar"><i style="width:${100*e.hp/e.maxHp}%"></i></div>${e.hp}/${e.maxHp} HP</div>`;$('battleLog').textContent=b.log;const moves=pc.moves;$('move1Btn').textContent=`${C.TYPES[C.MOVES[moves[0]].type].icon} ${C.MOVES[moves[0]].name}`;$('move2Btn').textContent=`${C.TYPES[C.MOVES[moves[1]].type].icon} ${C.MOVES[moves[1]].name}`;$('move1Btn').disabled=b.locked;$('move2Btn').disabled=b.locked;$('captureBtn').disabled=b.locked||b.boss;$('captureBtn').textContent=b.boss?'🧿 KAN IKKE FANGES':`🧿 ROGLAS ${Math.round(C.captureChance(e)*100)}%`;$('switchBtn').disabled=b.locked||game.team.filter(u=>u.hp>0).length<2;}
+function setBattleLog(text){if(!game.battle)return;game.battle.log=text;$('battleLog').textContent=text;}
+function playerMove(moveIndex){const b=game.battle;if(!b||b.locked)return;const unit=game.team[b.active];const move=C.CREATURES[unit.id].moves[moveIndex];b.locked=true;const r=C.applyMove(unit,b.enemy,move,.82+Math.random()*.18);tone(r.mult>1?690:460,.09,'square',.045);setBattleLog(`${C.CREATURES[unit.id].name} brukte ${r.move.name}! ${r.mult>1?'Det traff ekstra hardt! ':r.mult<1?'Ikke særlig effektivt. ':''}−${r.damage} HP`);renderBattleUI();setTimeout(()=>{if(b.enemy.hp<=0)return winBattle();enemyTurn();},650);}
+function enemyTurn(){const b=game.battle;if(!b)return;const enemy=b.enemy,unit=game.team[b.active];const moves=C.CREATURES[enemy.id].moves;const move=moves[Math.floor(Math.random()*moves.length)];const r=C.applyMove(enemy,unit,move,.78+Math.random()*.19);tone(150,.12,'sawtooth',.045);setBattleLog(`${C.CREATURES[enemy.id].name} svarer med ${r.move.name}. −${r.damage} HP`);C.tickStatus(enemy);C.tickStatus(unit);renderBattleUI();setTimeout(()=>{if(unit.hp<=0){const next=game.team.findIndex((u,i)=>i!==b.active&&u.hp>0);if(next<0)return loseBattle();b.active=next;setBattleLog(`${C.CREATURES[unit.id].name} må hvile. ${C.CREATURES[game.team[next].id].name} tar over!`);}b.round++;b.locked=false;renderBattleUI();},650);}
+function attemptCapture(){const b=game.battle;if(!b||b.locked||b.boss)return;b.locked=true;tone(820,.12,'sine');setBattleLog('Roglasset tegner en lysende ring rundt vesenet …');renderBattleUI();setTimeout(()=>{if(C.canCapture(b.enemy,Math.random()))captureSuccess();else{setBattleLog(`${C.CREATURES[b.enemy.id].name} brøt ut av lysringen!`);setTimeout(enemyTurn,500);}},750);}
+function captureSuccess(){const b=game.battle,id=b.enemy.id,c=C.CREATURES[id];if(!game.caught.includes(id))game.caught.push(id);if(game.team.length<3){const friend={...b.enemy,hp:Math.max(1,b.enemy.hp),status:{guard:0,weaken:0}};game.team.push(friend);setBattleLog(`${c.name} ble med i flokken!`);}else setBattleLog(`${c.name} stoler på dere, men flokken på tre er full.`);fanfare();if(game.caught.length-1>=2&&game.quest<2)game.quest=2;setTimeout(()=>endBattle('capture'),950);}
+function switchUnit(){const b=game.battle;if(!b||b.locked)return;const alive=game.team.map((u,i)=>u.hp>0?i:-1).filter(i=>i>=0&&i!==b.active);if(!alive.length)return;b.active=alive[0];b.locked=true;setBattleLog(`${C.CREATURES[game.team[b.active].id].name}, din tur!`);renderBattleUI();setTimeout(enemyTurn,500);}
+function winBattle(){const b=game.battle,unit=game.team[b.active],xp=b.boss?80:22+b.enemy.level*8;const levels=C.gainXp(unit,xp);setBattleLog(`${C.CREATURES[b.enemy.id].name} roer seg. ${C.CREATURES[unit.id].name} får ${xp} XP.${levels.length?' Nytt nivå: '+unit.level+'!':''}`);fanfare();if(b.boss){game.bossDefeated=true;game.quest=3;setTimeout(finishGame,1100);}else setTimeout(()=>endBattle('win'),950);}
+function loseBattle(){setBattleLog('Flokken er utslitt. Ninni løper tilbake til leirbålet!');tone(110,.4,'sawtooth');setTimeout(()=>{healTeam();game.player.x=9*TILE;game.player.y=17*TILE;endBattle('lose');toast('Bestemor Tora hjalp flokken på beina igjen.');},1200);}
+function endBattle(reason){hide('battleUI');game.battle=null;game.mode='world';game.encounterCooldown=110;updatePanels();saveGame();if(reason==='capture')toast('Nytt vennskap registrert i reisedagboken!');}
+function finishGame(){const time=elapsedSeconds();game.elapsed=time;if(!game.best||time<game.best){game.best=time;localStorage.setItem(BEST_KEY,String(time));}hide('battleUI');game.battle=null;game.mode='ending';$('endingText').textContent='Ninni finner glødesteinen under Flammefyrstens klo. Da steinen legges tilbake i fjellets hjerte, dempes flammene. Fyrsten var ikke ond – bare fortvilet.';$('endingStats').innerHTML=`<p><b>Tid:</b> ${formatTime(time)} · <b>Oppdaget:</b> ${game.seen.length}/7 · <b>Vennskap:</b> ${game.caught.length}/6</p><p>Beste tid: ${formatTime(game.best)}</p>`;show('ending');fanfare();updatePanels();saveGame();}
+function formatTime(sec){sec=Math.max(0,Math.floor(sec||0));return`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;}
+
+function pause(){if(game.mode==='world'){game.mode='pause';show('pauseScreen');}else if(game.mode==='pause'){hide('pauseScreen');game.mode='world';last=performance.now();}}
+function actionKey(code){if(code==='Enter'||code==='KeyE'||code==='Space')interact();if(code==='KeyF')visible('teamPanel')?closePanels():openPanel('teamPanel');if(code==='KeyQ')visible('questPanel')?closePanels():openPanel('questPanel');if(code==='KeyP'||code==='Escape'){if(game.mode==='panel')closePanels();else pause();}}
+function bindControls(){
+ addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();keys.add(e.code);if(!e.repeat)actionKey(e.code);});addEventListener('keyup',e=>keys.delete(e.code));addEventListener('blur',()=>keys.clear());document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.mode==='world')pause();});
+ document.querySelectorAll('[data-dir]').forEach(btn=>{const code={up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'}[btn.dataset.dir];const on=e=>{e.preventDefault();keys.add(code);};const off=e=>{e.preventDefault();keys.delete(code);};btn.addEventListener('pointerdown',on);btn.addEventListener('pointerup',off);btn.addEventListener('pointercancel',off);btn.addEventListener('pointerleave',off);});
+ $('actionBtn').onclick=interact;$('dialog').onclick=interact;$('mobileTeam').onclick=()=>openPanel('teamPanel');$('mobileQuest').onclick=()=>openPanel('questPanel');document.querySelectorAll('[data-close]').forEach(b=>b.onclick=closePanels);
+ $('move1Btn').onclick=()=>playerMove(0);$('move2Btn').onclick=()=>playerMove(1);$('captureBtn').onclick=attemptCapture;$('switchBtn').onclick=switchUnit;
+ $('newGameBtn').onclick=()=>{if(hasSave()&&!confirm('Starte på nytt og overskrive lagringen?'))return;resetGame();};$('continueBtn').onclick=()=>{if(loadGame()){hide('titleScreen');toast('Velkommen tilbake til Villspor');}};
+ $('saveBtn').onclick=()=>saveGame(true);$('resumeBtn').onclick=pause;$('keepPlayingBtn').onclick=()=>{hide('ending');game.mode='world';game.player.x=32*TILE;game.player.y=14*TILE;};$('restartBtn').onclick=resetGame;$('soundBtn').onclick=()=>{game.sound=!game.sound;$('soundBtn').textContent=game.sound?'🔊':'🔇';if(game.sound)tone(520,.08);saveGame();};
+}
+
+function drawWorld(){const cam=game.camera;ctx.fillStyle='#5e9860';ctx.fillRect(0,0,canvas.width,canvas.height);const x0=Math.max(0,Math.floor(cam.x/TILE)-1),x1=Math.min(WORLD.w,Math.ceil((cam.x+canvas.width)/TILE)+1),y0=Math.max(0,Math.floor(cam.y/TILE)-1),y1=Math.min(WORLD.h,Math.ceil((cam.y+canvas.height)/TILE)+1);
+ for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){const sx=x*TILE-cam.x,sy=y*TILE-cam.y;let color=x<14?((x+y)%2?'#78ad68':'#72a763'):x<29?((x+y)%2?'#3f754b':'#467d50'):((x+y)%2?'#4d4e52':'#55565b');if(x>=14&&x<29&&y>=13&&y<=15)color='#a88b5c';if(x>=29&&y>=13&&y<=15)color='#5e5651';ctx.fillStyle=color;ctx.fillRect(sx,sy,TILE+1,TILE+1);if(hash(x,y)%11===0&&x<29){ctx.fillStyle='#bed37a';ctx.fillRect(sx+5,sy+8,3,7);ctx.fillRect(sx+2,sy+10,8,3);}if(x>=29&&hash(x,y)%13===0){ctx.fillStyle='#77777d';ctx.fillRect(sx+4,sy+22,24,4);}}
+ drawRegionDetails();for(const p of PROPS)drawProp(p);for(const n of NPCS)drawNPC(n);if(!game.bossDefeated&&game.player.x>29*TILE)drawCreature('flammefyrsten',38*TILE-cam.x,14*TILE-cam.y,1.1,false);
+ drawNinni();drawPlayer();
+}
+function drawRegionDetails(){const c=game.camera;
+ ctx.fillStyle='#335f76';ctx.fillRect(-c.x,24*TILE-c.y,14*TILE,4*TILE);for(let x=0;x<14;x++){ctx.fillStyle=x%2?'#6cc3cf':'#79d1d2';ctx.fillRect(x*TILE-c.x,25*TILE-c.y+Math.sin(performance.now()/300+x)*3,TILE,3);}
+ ctx.fillStyle='#28302f';ctx.fillRect(29*TILE-c.x,0-c.y,2*TILE,WORLD.h*TILE);ctx.fillStyle='#7a6b54';ctx.fillRect(29*TILE-c.x,13*TILE-c.y,2*TILE,3*TILE);ctx.fillStyle='#e88745';ctx.fillRect(29*TILE-c.x+13,13*TILE-c.y+12,6,70);
+ ctx.fillStyle='#7ac7b4';ctx.font='bold 15px Nunito';ctx.fillText('FURULY CAMPING',2*TILE-c.x,3*TILE-c.y);ctx.fillStyle='#d7d1a7';ctx.fillText('HVISKESKOGEN',18*TILE-c.x,4*TILE-c.y);ctx.fillStyle='#f0a35a';ctx.fillText('GLØDESTEINSHULEN',31*TILE-c.x,5*TILE-c.y);
+}
+function drawProp(p){const x=p.x*TILE-game.camera.x,y=p.y*TILE-game.camera.y;if(p.kind==='tent'){ctx.fillStyle='#e8bd58';ctx.beginPath();ctx.moveTo(x,y+28);ctx.lineTo(x+16,y);ctx.lineTo(x+32,y+28);ctx.fill();ctx.fillStyle='#8d4c38';ctx.fillRect(x+14,y+14,4,14);}if(p.kind==='camper'){ctx.fillStyle='#e9e2c4';ctx.fillRect(x-10,y,65,33);ctx.fillStyle='#3a7180';ctx.fillRect(x+29,y+5,20,11);ctx.fillStyle='#cc6650';ctx.fillRect(x-7,y+5,22,6);ctx.fillStyle='#252e2e';ctx.beginPath();ctx.arc(x+2,y+34,8,0,7);ctx.arc(x+45,y+34,8,0,7);ctx.fill();}if(p.kind==='fire'){ctx.fillStyle='#60402f';ctx.fillRect(x+3,y+23,28,6);ctx.fillStyle='#ffca50';ctx.beginPath();ctx.moveTo(x+16,y+2);ctx.lineTo(x+27,y+25);ctx.lineTo(x+6,y+25);ctx.fill();ctx.fillStyle='#ed663c';ctx.fillRect(x+13,y+13,7,12);}if(p.kind==='sign'){ctx.fillStyle='#6b4c32';ctx.fillRect(x+14,y+12,5,24);ctx.fillStyle='#d5b56b';ctx.fillRect(x-4,y,41,18);ctx.fillStyle='#3f543e';ctx.font='bold 10px sans-serif';ctx.fillText('SKOG →',x,y+12);}if(p.kind==='stone'){ctx.fillStyle='#7c7c79';ctx.beginPath();ctx.ellipse(x+16,y+20,15,11,0,0,7);ctx.fill();}if(p.kind==='crystal'){ctx.fillStyle='#ff9a55';ctx.beginPath();ctx.moveTo(x+16,y);ctx.lineTo(x+28,y+18);ctx.lineTo(x+16,y+33);ctx.lineTo(x+5,y+18);ctx.fill();}}
+function drawNPC(n){const x=n.x-game.camera.x,y=n.y-game.camera.y;ctx.fillStyle=n.color;ctx.fillRect(x-10,y-10,20,23);ctx.fillStyle='#f3cc9d';ctx.fillRect(x-7,y-20,14,13);ctx.fillStyle='#172627';ctx.fillRect(x-4,y-17,2,2);ctx.fillRect(x+3,y-17,2,2);ctx.fillStyle='#fff';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText(n.icon,x,y-24);ctx.textAlign='left';}
+function drawPlayer(){const x=game.player.x-game.camera.x,y=game.player.y-game.camera.y;ctx.fillStyle='#26445c';ctx.fillRect(x-9,y-9,18,21);ctx.fillStyle='#d7ad7e';ctx.fillRect(x-7,y-18,14,11);ctx.fillStyle='#d45f42';ctx.fillRect(x-9,y-22,18,6);ctx.fillStyle='#f0d35b';ctx.fillRect(x+(game.player.dir==='right'?6:-8),y-5,4,9);}
+function drawNinni(){const x=game.ninni.x-game.camera.x,y=game.ninni.y-game.camera.y;ctx.fillStyle='#f7f2dc';ctx.beginPath();ctx.ellipse(x,y,11,8,0,0,7);ctx.fill();ctx.beginPath();ctx.arc(x+7,y-6,7,0,7);ctx.fill();ctx.fillStyle='#d5c9ad';ctx.beginPath();ctx.ellipse(x+10,y-8,4,7,-.5,0,7);ctx.fill();ctx.fillStyle='#1d2a29';ctx.fillRect(x+10,y-7,2,2);ctx.fillRect(x+14,y-3,3,2);ctx.strokeStyle='#f7f2dc';ctx.lineWidth=4;ctx.beginPath();ctx.arc(x-10,y-5,7,0,4);ctx.stroke();}
+function drawCreature(id,x,y,scale=1,flip=false){const c=C.CREATURES[id],s=scale;ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);ctx.fillStyle='#0004';ctx.beginPath();ctx.ellipse(0,22*s,25*s,7*s,0,0,7);ctx.fill();const [a,b,d]=c.colors;ctx.fillStyle=a;
+ if(c.shape==='fox'){ctx.beginPath();ctx.ellipse(0,0,24*s,18*s,0,0,7);ctx.fill();ctx.beginPath();ctx.moveTo(-18*s,-12*s);ctx.lineTo(-12*s,-32*s);ctx.lineTo(-2*s,-15*s);ctx.moveTo(18*s,-12*s);ctx.lineTo(12*s,-32*s);ctx.lineTo(2*s,-15*s);ctx.fill();ctx.fillStyle=b;ctx.beginPath();ctx.moveTo(-7*s,1*s);ctx.lineTo(7*s,1*s);ctx.lineTo(0,13*s);ctx.fill();}
+ else if(c.shape==='moss'){ctx.beginPath();ctx.arc(0,0,26*s,0,7);ctx.fill();ctx.fillStyle=b;for(let i=-2;i<=2;i++){ctx.beginPath();ctx.arc(i*10*s,-20*s,10*s,0,7);ctx.fill();}}
+ else if(c.shape==='otter'){ctx.beginPath();ctx.ellipse(0,1*s,17*s,27*s,0,0,7);ctx.fill();ctx.fillStyle=b;ctx.beginPath();ctx.ellipse(0,7*s,10*s,14*s,0,0,7);ctx.fill();}
+ else if(c.shape==='crab'){ctx.beginPath();ctx.ellipse(0,2*s,25*s,18*s,0,0,7);ctx.fill();ctx.strokeStyle=b;ctx.lineWidth=7*s;for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*17*s,0);ctx.lineTo(side*32*s,-12*s);ctx.stroke();}}
+ else if(c.shape==='bird'){ctx.beginPath();ctx.ellipse(0,0,17*s,24*s,0,0,7);ctx.fill();ctx.fillStyle=b;ctx.beginPath();ctx.ellipse(-16*s,2*s,15*s,8*s,-.5,0,7);ctx.ellipse(16*s,2*s,15*s,8*s,.5,0,7);ctx.fill();}
+ else if(c.shape==='bat'){ctx.beginPath();ctx.arc(0,0,16*s,0,7);ctx.fill();ctx.fillStyle=b;for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*10*s,-8*s);ctx.lineTo(side*35*s,-24*s);ctx.lineTo(side*29*s,8*s);ctx.lineTo(side*12*s,5*s);ctx.fill();}}
+ else{ctx.beginPath();ctx.ellipse(0,0,29*s,35*s,0,0,7);ctx.fill();ctx.fillStyle=b;for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*12*s,-15*s);ctx.lineTo(side*42*s,-35*s);ctx.lineTo(side*31*s,10*s);ctx.fill();}ctx.fillStyle=d;ctx.beginPath();ctx.moveTo(-12*s,-27*s);ctx.lineTo(-4*s,-48*s);ctx.lineTo(2*s,-29*s);ctx.lineTo(12*s,-49*s);ctx.lineTo(14*s,-23*s);ctx.fill();}
+ ctx.fillStyle='#fff';ctx.fillRect(-9*s,-6*s,6*s,7*s);ctx.fillRect(5*s,-6*s,6*s,7*s);ctx.fillStyle=d;ctx.fillRect(-7*s,-4*s,3*s,4*s);ctx.fillRect(7*s,-4*s,3*s,4*s);ctx.restore();}
+function drawBattle(){const b=game.battle;if(!b)return;const t=performance.now()/1000;ctx.fillStyle=b.boss?'#2b1a25':'#b8d4a1';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle=b.boss?'#783a31':'#6c9d67';for(let i=0;i<14;i++){ctx.beginPath();ctx.arc(i*80+(i%2)*20,390+Math.sin(t+i)*5,55,0,7);ctx.fill();}ctx.fillStyle=b.boss?'#f08045':'#e6d99a';ctx.beginPath();ctx.ellipse(710,290,145,45,0,0,7);ctx.ellipse(245,410,165,48,0,0,7);ctx.fill();drawCreature(b.enemy.id,710,260,b.boss?2.2:1.8,false);drawCreature(game.team[b.active].id,245,380,2,true);ctx.fillStyle='#19312f';ctx.font='900 22px Nunito';ctx.fillText(b.boss?'FJELLETS HJERTE':'VILLSPOR',28,42);}
+function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);if(game.mode==='battle')drawBattle();else drawWorld();}
+function update(dt){if(game.mode==='world'){let dx=(keys.has('ArrowRight')||keys.has('KeyD')?1:0)-(keys.has('ArrowLeft')||keys.has('KeyA')?1:0),dy=(keys.has('ArrowDown')||keys.has('KeyS')?1:0)-(keys.has('ArrowUp')||keys.has('KeyW')?1:0);if(dx&&dy){dx*=.707;dy*=.707;}tryMove(dx,dy,dt);game.camera.x=C.clamp(game.player.x-canvas.width/2,0,WORLD.w*TILE-canvas.width);game.camera.y=C.clamp(game.player.y-canvas.height/2,0,WORLD.h*TILE-canvas.height);if(performance.now()-game.lastSave>30000)saveGame();updatePanels();}}
+function loop(ts){const dt=Math.min(.04,(ts-last)/1000||0);last=ts;update(dt);draw();raf=requestAnimationFrame(loop);}
+
+function init(){bindControls();$('continueBtn').classList.toggle('hidden',!hasSave());$('titleScreen').classList.add('visible');updatePanels();raf=requestAnimationFrame(loop);}
+window.VillsporDebug={get game(){return game;},core:C,startBattle,setPosition(x,y){game.player.x=x*TILE;game.player.y=y*TILE;},interact,playerMove,attemptCapture,switchUnit,saveGame,loadGame,resetGame,getSnapshot(){return{mode:game.mode,quest:game.quest,team:game.team.map(u=>({id:u.id,level:u.level,hp:u.hp,maxHp:u.maxHp})),seen:[...game.seen],caught:[...game.caught],bossDefeated:game.bossDefeated,area:areaAt(game.player.x)};},forceWorld(){hide('titleScreen');game.started=true;game.mode='world';game.startTime=game.startTime||Date.now();if(!game.team.length)game.team=[C.makeCreature('mosemurr',1)];},finishGame};
+init();
+})();
