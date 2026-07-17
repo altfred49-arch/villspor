@@ -19,6 +19,9 @@ Gå deretter til `http://127.0.0.1:8770`.
 - **Flokk:** F
 - **Dagbok:** Q
 - **Pause:** P eller Escape
+- **Fullskjerm:** ⛶-knappen øverst til høyre. På Safari uten Fullscreen API vises veiledning for «Legg til på Hjem-skjermen».
+
+I lav landskapsmodus blir kampmenyen automatisk komprimert nederst, og utforskningskontrollene skjules mens en kamp pågår.
 
 ## Mål
 
