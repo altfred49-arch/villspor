@@ -14,7 +14,7 @@ Gå deretter til `http://127.0.0.1:8770`.
 
 ## Kontroller
 
-- **Flytt:** WASD, piltaster eller berøringsknapper
+- **Flytt:** WASD, piltaster eller berøringsknapper (hold inne for kontinuerlig bevegelse)
 - **Samhandle:** E, Enter eller A
 - **Flokk:** F
 - **Dagbok:** Q
@@ -28,10 +28,15 @@ Tre valgfrie glødespor er gjemt i skogen og hulen. De gir erfaring, flere villb
 
 ## Teknikk
 
-Ren HTML5 Canvas, CSS og JavaScript uten byggetrinn. `game-core.js` inneholder datamodell og testbar kampmotor. Fremdrift lagres lokalt i nettleseren.
+Ren HTML5 Canvas, CSS og JavaScript uten byggetrinn. `game-core.js` inneholder datamodell og testbar kampmotor. Sju originale, lokalt lagrede SVG-illustrasjoner brukes i kamp, flokk og leirreserve, med programmatisk fallback dersom en fil ikke kan lastes. Mobilkontrollene bruker Pointer Events og blokkerer tekstmarkering, touch-callout og kontekstmeny bare på kontrollområdet. Fremdrift lagres lokalt i nettleseren.
 
 ## Tester
 
 ```bash
-node tests.mjs
+npm install
+npm test
+# Med lokal server på port 8770:
+npm run test:e2e
 ```
+
+`BASE_URL` og `QA_OUT` kan overstyres for å teste en publisert versjon og lagre skjermbilder et annet sted.

@@ -26,6 +26,9 @@ test('lokal lagring, beste tid, lyd og debug-API finnes',()=>{for(const token of
 test('sprintsystemer for villbær, glødespor, minikart og synlige skogshindre finnes',()=>{for(const token of ['useBerry','collectRelic','captureOdds','drawMiniMap','drawForestCanopy','drawRelic'])assert.ok(game.includes(token));assert.match(game,/relics:\[\]/);assert.match(game,/inventory:\{berries:2\}/);});
 test('kampene har tydelige effekt- og statuslag',()=>{for(const token of ["?'burst':'hit'","kind:'heal'","kind:'capture'",'Skjold','Svekket'])assert.ok(game.includes(token));});
 test('nye venner kan lagres i reserve og byttes inn uten å øke flokken over tre',()=>{for(const token of ['reserve:[]','game.reserve.push','bringReserve','setLeader','data-reserve'])assert.ok(game.includes(token));assert.match(game,/game\.team\.length<3/);});
+test('alle sju originale skapningsillustrasjoner finnes som gyldige SVG-filer',()=>{for(const id of Object.values(core.CREATURES).map(c=>c.id)){const p=`./assets/creatures/${id}.svg`;assert.ok(fs.existsSync(p),p);const svg=fs.readFileSync(p,'utf8');assert.match(svg,/<svg/);assert.match(svg,/viewBox="0 0 256 256"/);}});
+test('skapningsbilder brukes i canvas og paneler med fallback',()=>{for(const token of ['creatureArt','drawImage(art','creatureThumb','creature-fallback','onerror='])assert.ok(game.includes(token));});
+test('mobilkontroller blokkerer callout og håndterer hele pointer-livssyklusen',()=>{for(const token of ['-webkit-touch-callout:none','touch-action:none','-webkit-user-select:none'])assert.ok(css.includes(token));for(const token of ['setPointerCapture','releasePointerCapture','pointercancel','lostpointercapture','contextmenu','selectstart','pointermove'])assert.ok(game.includes(token));});
 test('JavaScript-filene kan parses',()=>{new vm.Script(fs.readFileSync('./game-core.js','utf8'));new vm.Script(game);});
 
 let passed=0;
