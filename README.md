@@ -29,7 +29,9 @@ Snakk med Bestemor Tora, finn naturvesenene i skogen, bli venn med minst to, åp
 
 Tre valgfrie glødespor er gjemt i skogen og hulen. De gir erfaring, flere villbær og et sterkere Roglass. Villbær kan brukes til taktisk helbredelse i kamp. Minikartet viser veien østover mot fjellets hjerte. Nye venner utover flokken på tre venter i leirreserven og kan byttes inn fra flokkspanelet.
 
-Etter begge avslutningene forblir verden åpen. Reisedagboken markerer hovedhistorien som fullført, NPC-ene reagerer på utfallet, og Sporboka viser oppdaget-/vennestatus for alle sju vesener. Hvis Flammefyrsten først beseires, kan vennskapsprøven forsøkes igjen ved fjellets hjerte.
+Loke og Skogvokter Siv tilbyr hvert sitt lagrede sideoppdrag med engangsbelønning. Et blått glimt i hulen leder til den valgfrie Stjernesteinen. Alle sju vesener lærer et tredje, rollebasert angrep på nivå 3, mens fiendene vurderer typefordel, lav HP og statuseffekter før de angriper.
+
+Etter begge avslutningene forblir verden åpen. Reisedagboken markerer hovedhistorien som fullført, NPC-ene reagerer på utfallet, og Sporboka viser oppdaget-/vennestatus for alle sju vesener. Hvis Flammefyrsten først beseires, kan vennskapsprøven forsøkes igjen ved fjellets hjerte. En ny Sporstein ved campingplassen åpner dessuten den gjenspillbare **Sporprøven**: tre kamper uten hvile mellom rundene, med første- og gjentakelsesbelønning. Roglassknappen avbryter prøven trygt.
 
 ## Teknikk
 
