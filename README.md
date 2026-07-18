@@ -31,7 +31,9 @@ Tre valgfrie glødespor er gjemt i skogen og hulen. De gir erfaring, flere villb
 
 Loke og Skogvokter Siv tilbyr hvert sitt lagrede sideoppdrag med engangsbelønning. Et blått glimt i hulen leder til den valgfrie Stjernesteinen. Alle sju vesener lærer et tredje, rollebasert angrep på nivå 3, mens fiendene vurderer typefordel, lav HP og statuseffekter før de angriper.
 
-Etter begge avslutningene forblir verden åpen. Reisedagboken markerer hovedhistorien som fullført, NPC-ene reagerer på utfallet, og Sporboka viser oppdaget-/vennestatus for alle sju vesener. Hvis Flammefyrsten først beseires, kan vennskapsprøven forsøkes igjen ved fjellets hjerte. En ny Sporstein ved campingplassen åpner dessuten den gjenspillbare **Sporprøven**: tre kamper uten hvile mellom rundene, med første- og gjentakelsesbelønning. Roglassknappen avbryter prøven trygt.
+Ved campingplassen starter **Ninnis nattspor**, et firestegs sporoppdrag gjennom eksisterende områder med miljøspor, dialog, kamp og engangsbelønning. I kamp varsler Ninni hvilken type handling fienden forbereder uten å avsløre alle detaljer. Hvert vesen har dessuten en liten rollebasert passiv egenskap som vises i Flokk og Sporbok.
+
+Etter begge avslutningene forblir verden åpen. Reisedagboken markerer hovedhistorien som fullført, NPC-ene reagerer på utfallet, og Sporboka viser oppdaget-/vennestatus for alle sju vesener. Hvis Flammefyrsten først beseires, kan vennskapsprøven forsøkes igjen ved fjellets hjerte. En ny Sporstein ved campingplassen åpner dessuten den gjenspillbare **Sporprøven**: tre kamper uten hvile mellom rundene, med første- og gjentakelsesbelønning samt lagret rekord for færrest brukte villbær. Roglassknappen avbryter prøven trygt.
 
 ## Teknikk
 
