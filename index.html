@@ -20,8 +20,10 @@
     <section id="gameWrap" aria-label="Spillområde">
       <canvas id="game" width="960" height="540" aria-label="Villspor spillverden">Villspor trenger en nettleser med støtte for HTML5 Canvas.</canvas>
       <div id="toast" role="status" aria-live="polite"></div>
-      <div id="scentHud" class="scent-hud hidden" role="status" aria-live="polite"></div>
-      <div id="encounterBanner" class="encounter-banner hidden" role="status" aria-live="assertive"></div>
+      <div id="scentHud" class="scent-hud hidden" aria-hidden="true"></div>
+      <div id="encounterBanner" class="encounter-banner hidden" aria-hidden="true"></div>
+      <div id="liveStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+      <div id="alertStatus" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
       <section id="titleScreen" class="panel-screen visible">
         <div class="hero-mark">🐾</div>
