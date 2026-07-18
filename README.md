@@ -33,6 +33,8 @@ Loke og Skogvokter Siv tilbyr hvert sitt lagrede sideoppdrag med engangsbelønni
 
 Ved campingplassen starter **Ninnis nattspor**, et firestegs sporoppdrag gjennom eksisterende områder med miljøspor, dialog, kamp og engangsbelønning. I kamp varsler Ninni hvilken type handling fienden forbereder uten å avsløre alle detaljer. Hvert vesen har dessuten en liten rollebasert passiv egenskap som vises i Flokk og Sporbok.
 
+Skogen og hulen har nå synlige naturvesener som vandrer i sine egne biomer. Kontakt eller samhandling starter et kontrollert møte, mens tilfeldige møter er redusert til 10 % fallback når ingen synlig roamer er i nærheten. Ninnis sporsans viser type og grov retning mot nærmeste vesen i seks sekunder. Fangede venner kan sees og snakkes med ved campingplassen, som også har ildfluer, skogsstøv og krystallglød med støtte for redusert bevegelse.
+
 Etter begge avslutningene forblir verden åpen. Reisedagboken markerer hovedhistorien som fullført, NPC-ene reagerer på utfallet, og Sporboka viser oppdaget-/vennestatus for alle sju vesener. Hvis Flammefyrsten først beseires, kan vennskapsprøven forsøkes igjen ved fjellets hjerte. En ny Sporstein ved campingplassen åpner dessuten den gjenspillbare **Sporprøven**: tre kamper uten hvile mellom rundene, med første- og gjentakelsesbelønning samt lagret rekord for færrest brukte villbær. Roglassknappen avbryter prøven trygt.
 
 ## Teknikk
@@ -41,7 +43,7 @@ Ren HTML5 Canvas, CSS og JavaScript uten byggetrinn. `game-core.js` inneholder d
 
 ### Utviklerverktøy
 
-Åpne `http://127.0.0.1:8770/?debug=1` for et sesjonsbasert balansepanel. Det kan justere spillerfart, møtesjanse, lydnivå og angrepsstyrke, teste lyder, helbrede flokken og legge til et testbær. Mens debugmodus er aktiv, er all lagring deaktivert; tuning og testhandlinger forsvinner ved ny sidelasting og kan derfor ikke overskrive et vanlig spill.
+Åpne `http://127.0.0.1:8770/?debug=1` for et sesjonsbasert balansepanel. Det kan justere spillerfart, møtesjanse, synlige roamers, lydnivå og angrepsstyrke, plassere et testvesen, aktivere sporsans, teste lyder, helbrede flokken og legge til et testbær. Panelet viser også antall roamers, fallbackmøter og partikler. Mens debugmodus er aktiv, er all lagring deaktivert; tuning og testhandlinger forsvinner ved ny sidelasting og kan derfor ikke overskrive et vanlig spill.
 
 ## Tester
 

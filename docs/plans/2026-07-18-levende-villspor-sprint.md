@@ -201,11 +201,11 @@ const ROAMER_ZONES={
 
 ## Definition of Done
 
-- [ ] Synlige roamers er hovedveien til vanlige møter.
-- [ ] Sporsans fungerer på tastatur og mobil.
-- [ ] Campvenner bruker fangst/reserve uten ny permanent progresjon.
-- [ ] Miljøeffekter respekterer reduced motion og påvirker ikke UI.
-- [ ] Ingen transient state finnes i `villspor-save-v1`.
-- [ ] Gamle lagringer og begge avslutninger fungerer.
+- [x] Synlige roamers er hovedveien til vanlige møter.
+- [x] Sporsans fungerer på tastatur og mobil.
+- [x] Campvenner bruker fangst/reserve uten ny permanent progresjon.
+- [x] Miljøeffekter respekterer reduced motion og påvirker ikke UI.
+- [x] Ingen transient state finnes i `villspor-save-v1`.
+- [x] Gamle lagringer og begge avslutninger fungerer.
 - [ ] Chromium, WebKit og axe er grønne lokalt og offentlig.
-- [ ] Review er ferdig før release og ZIP.
+- [x] Review er ferdig før release og ZIP.
