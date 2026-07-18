@@ -41,7 +41,7 @@ Ren HTML5 Canvas, CSS og JavaScript uten byggetrinn. `game-core.js` inneholder d
 
 ### Utviklerverktøy
 
-Åpne `http://127.0.0.1:8770/?debug=1` for et sesjonsbasert balansepanel. Det kan justere spillerfart, møtesjanse, lydnivå og angrepsstyrke, teste lyder, helbrede flokken og legge til et testbær. Panelet lastes uten produksjonsfunksjon når parameteren mangler og skriver aldri tuning til lagringen.
+Åpne `http://127.0.0.1:8770/?debug=1` for et sesjonsbasert balansepanel. Det kan justere spillerfart, møtesjanse, lydnivå og angrepsstyrke, teste lyder, helbrede flokken og legge til et testbær. Mens debugmodus er aktiv, er all lagring deaktivert; tuning og testhandlinger forsvinner ved ny sidelasting og kan derfor ikke overskrive et vanlig spill.
 
 ## Tester
 

@@ -8,6 +8,7 @@ const html=fs.readFileSync(new URL('./index.html',import.meta.url),'utf8');
 const game=fs.readFileSync(new URL('./game.js',import.meta.url),'utf8');
 const css=fs.readFileSync(new URL('./styles.css',import.meta.url),'utf8');
 const debug=fs.readFileSync(new URL('./debug-tools.js',import.meta.url),'utf8');
+const zzfx=fs.readFileSync(new URL('./vendor/zzfx/ZzFXMicro.min.js',import.meta.url),'utf8');
 const tests=[];
 const test=(name,fn)=>tests.push([name,fn]);
 
@@ -46,7 +47,8 @@ test('skapningsbilder brukes i canvas og paneler med fallback',()=>{for(const to
 test('mobilkontroller blokkerer callout og håndterer hele pointer-livssyklusen',()=>{for(const token of ['-webkit-touch-callout:none','touch-action:none','-webkit-user-select:none'])assert.ok(css.includes(token));for(const token of ['setPointerCapture','releasePointerCapture','pointercancel','lostpointercapture','contextmenu','selectstart','pointermove'])assert.ok(game.includes(token));});
 test('lav landskapskamp har kompakt meny, skjulte retningsknapper og fullskjermvalg',()=>{assert.match(html,/id="fullscreenBtn"/);for(const token of ['data-game-mode="battle"','grid-template-areas:"status actions" "log actions"','max-height:104px'])assert.ok(css.includes(token));for(const token of ['toggleFullscreen','requestFullscreen','webkitRequestFullscreen','syncModeUI'])assert.ok(game.includes(token));});
 test('lokal ZzFX-lydmotor har lisens, navngitte effekter og oscillator-fallback',()=>{assert.match(html,/vendor\/zzfx\/ZzFXMicro\.min\.js/);assert.ok(fs.existsSync('./vendor/zzfx/LICENSE'));assert.match(fs.readFileSync('./vendor/zzfx/LICENSE','utf8'),/MIT License/);for(const token of ['SOUND_PRESETS','playSound','critical','capture','typeof zzfx'])assert.ok(game.includes(token),token);});
-test('utviklerverktøy er eksplisitt debug-låst og kan tune uten å endre lagringsformatet',()=>{assert.match(debug,/params\.get\('debug'\)!=='1'/);for(const token of ['runtimeConfig','debugSpeed','debugEncounter','debugPower','Nullstill tuning'])assert.ok(debug.includes(token),token);assert.ok(!debug.includes('localStorage'));});
+test('lydkonteksten opprettes først ved avspilling og resume-feil håndteres',()=>{assert.match(zzfx,/zzfxX=0/);assert.match(game,/await zzfxX\.resume\(\)/);assert.match(game,/playPreset/);});
+test('utviklerverktøy er eksplisitt debug-låst og kan tune uten å endre lagringsformatet',()=>{assert.match(debug,/params\.get\('debug'\)!=='1'/);assert.match(debug,/runtimeConfig\.debugActive=true/);assert.match(game,/runtimeConfig\.debugActive/);for(const token of ['runtimeConfig','debugSpeed','debugEncounter','debugPower','Nullstill tuning'])assert.ok(debug.includes(token),token);assert.ok(!debug.includes('localStorage'));});
 test('JavaScript-filene kan parses',()=>{new vm.Script(fs.readFileSync('./game-core.js','utf8'));new vm.Script(game);new vm.Script(debug);});
 
 let passed=0;

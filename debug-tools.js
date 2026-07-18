@@ -5,6 +5,7 @@ if(params.get('debug')!=='1')return;
 const D=window.VillsporDebug,C=D?.core;
 if(!D||!C)return;
 document.body.dataset.debugTools='active';
+D.runtimeConfig.debugActive=true;
 const originalPowers=Object.fromEntries(Object.entries(C.MOVES).map(([id,m])=>[id,m.power]));
 const panel=document.createElement('aside');
 panel.id='debugTools';panel.className='debug-tools';panel.setAttribute('aria-label','Villspor utviklerverktøy');
@@ -20,8 +21,8 @@ document.body.append(panel);
 const $=id=>document.getElementById(id),speed=$('debugSpeed'),encounter=$('debugEncounter'),volume=$('debugVolume'),move=$('debugMove'),power=$('debugPower');
 for(const [id,m] of Object.entries(C.MOVES)){const option=document.createElement('option');option.value=id;option.textContent=m.name;move.append(option);}
 function setOut(id,value){$(id).textContent=value;}
-function sync(){speed.value=D.game.player.speed;encounter.value=D.runtimeConfig.encounterChance;volume.value=typeof zzfxV==='number'?zzfxV:.3;power.value=C.MOVES[move.value].power;setOut('debugSpeedOut',speed.value);setOut('debugEncounterOut',`${Math.round(encounter.value*100)} %`);setOut('debugVolumeOut',`${Math.round(volume.value*100)} %`);setOut('debugPowerOut',power.value);}
-speed.oninput=()=>{D.game.player.speed=Number(speed.value);setOut('debugSpeedOut',speed.value);};
+function sync(){speed.value=D.runtimeConfig.playerSpeed;encounter.value=D.runtimeConfig.encounterChance;volume.value=typeof zzfxV==='number'?zzfxV:.3;power.value=C.MOVES[move.value].power;setOut('debugSpeedOut',speed.value);setOut('debugEncounterOut',`${Math.round(encounter.value*100)} %`);setOut('debugVolumeOut',`${Math.round(volume.value*100)} %`);setOut('debugPowerOut',power.value);}
+speed.oninput=()=>{D.runtimeConfig.playerSpeed=Number(speed.value);setOut('debugSpeedOut',speed.value);};
 encounter.oninput=()=>{D.runtimeConfig.encounterChance=Number(encounter.value);setOut('debugEncounterOut',`${Math.round(encounter.value*100)} %`);};
 volume.oninput=()=>{if(typeof zzfxV==='number')zzfxV=Number(volume.value);setOut('debugVolumeOut',`${Math.round(volume.value*100)} %`);};
 move.onchange=sync;
@@ -30,7 +31,7 @@ let soundIndex=0;const sounds=['dialog','menu','trail','hit','critical','enemy',
 $('debugSound').onclick=()=>D.playSound(sounds[soundIndex++%sounds.length]);
 $('debugHeal').onclick=()=>{for(const u of D.game.team)u.hp=u.maxHp;D.refreshBattle();};
 $('debugBerry').onclick=()=>{D.game.inventory.berries++;D.refreshBattle();};
-$('debugReset').onclick=()=>{D.game.player.speed=142;D.runtimeConfig.encounterChance=.28;if(typeof zzfxV==='number')zzfxV=.3;for(const [id,n] of Object.entries(originalPowers))C.MOVES[id].power=n;sync();};
+$('debugReset').onclick=()=>{D.runtimeConfig.playerSpeed=142;D.runtimeConfig.encounterChance=.28;if(typeof zzfxV==='number')zzfxV=.3;for(const [id,n] of Object.entries(originalPowers))C.MOVES[id].power=n;sync();};
 let hidden=false;const toggle=document.createElement('button');toggle.className='debug-tools-toggle hidden';toggle.textContent='🛠 Tuning';toggle.setAttribute('aria-label','Vis utviklerverktøy');document.body.append(toggle);
 panel.ondblclick=e=>{if(e.target.closest('input,select,button'))return;hidden=true;panel.classList.add('hidden');toggle.classList.remove('hidden');};
 toggle.onclick=()=>{hidden=false;panel.classList.remove('hidden');toggle.classList.add('hidden');};
