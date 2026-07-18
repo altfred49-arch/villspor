@@ -17,7 +17,7 @@ const CREATURES={
   kongleklo:{id:'kongleklo',name:'Kongleklo',type:'VEKST',bio:'Samler blanke ting i kongleskallet sitt.',base:{hp:50,attack:14,defense:13,speed:7},moves:['konglekast','barkbrak'],colors:['#8c6741','#79ad52','#403b2d'],shape:'crab'},
   fjordfnugg:{id:'fjordfnugg',name:'Fjordfnugg',type:'VANN',bio:'Et fjærlett fjordvesen som varsler regn.',base:{hp:40,attack:12,defense:9,speed:17},moves:['bobleblink','fossedunk'],colors:['#91dbe4','#f0fff3','#527c9c'],shape:'bird'},
   kullvinge:{id:'kullvinge',name:'Kullvinge',type:'ILD',bio:'Trives i varme bergsprekker og tegner med sot.',base:{hp:43,attack:15,defense:8,speed:15},moves:['kullnebb','vingegnist'],colors:['#332f3e','#f16a42','#ffc85a'],shape:'bat'},
-  flammefyrsten:{id:'flammefyrsten',name:'Flammefyrsten',type:'ILD',bio:'Fjellets eldgamle vokter, vekket av en stjålet glødestein.',base:{hp:92,attack:18,defense:14,speed:10},moves:['flammesverd','lavastorm'],colors:['#9d2e28','#ff6b32','#ffd45a'],shape:'dragon',boss:true}
+  flammefyrsten:{id:'flammefyrsten',name:'Flammefyrsten',type:'ILD',bio:'Fjellets stolte, eldgamle vokter. Et vennskap som må fortjenes.',base:{hp:64,attack:16,defense:14,speed:11},moves:['flammesverd','lavastorm'],colors:['#9d2e28','#ff6b32','#ffd45a'],shape:'dragon',boss:true,legendary:true}
 };
 function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
 function statsFor(id,level=1){const c=CREATURES[id];if(!c)throw new Error('Ukjent vesen: '+id);return{maxHp:c.base.hp+(level-1)*6,attack:c.base.attack+(level-1)*2,defense:c.base.defense+(level-1)*2,speed:c.base.speed+(level-1)};}
@@ -30,6 +30,7 @@ function applyMove(attacker,defender,moveId,roll=.85){const result=calcDamage(at
 function tickStatus(unit){for(const k of ['guard','weaken'])if(unit.status?.[k]>0)unit.status[k]--;}
 function captureChance(unit){if(CREATURES[unit.id].boss)return 0;return clamp(.22+(1-unit.hp/unit.maxHp)*.68,0.22,.9);}
 function canCapture(unit,roll){return roll<captureChance(unit);}
+function bossFriendshipState(unit,relicCount=0,alreadyCaught=false){if(!unit||unit.id!=='flammefyrsten')return'not-boss';if(alreadyCaught)return'already';if(relicCount<3)return'missing-relics';if(unit.hp/unit.maxHp>.25)return'weaken';return'ready';}
 function validateData(){const errors=[];const ids=Object.keys(CREATURES);if(ids.filter(id=>!CREATURES[id].boss).length!==6)errors.push('Må ha seks fangbare vesener');for(const [id,c] of Object.entries(CREATURES)){if(!TYPES[c.type])errors.push(id+' har ugyldig type');if(c.moves.length<2)errors.push(id+' mangler angrep');for(const m of c.moves)if(!MOVES[m])errors.push(id+' viser til ukjent angrep '+m);}return errors;}
-return{TYPES,MOVES,CREATURES,clamp,statsFor,makeCreature,typeMultiplier,xpNeeded,gainXp,calcDamage,applyMove,tickStatus,captureChance,canCapture,validateData};
+return{TYPES,MOVES,CREATURES,clamp,statsFor,makeCreature,typeMultiplier,xpNeeded,gainXp,calcDamage,applyMove,tickStatus,captureChance,canCapture,bossFriendshipState,validateData};
 });

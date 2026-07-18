@@ -25,9 +25,11 @@ I lav landskapsmodus blir kampmenyen automatisk komprimert nederst, og utforskni
 
 ## Mål
 
-Snakk med Bestemor Tora, finn naturvesenene i skogen, fang minst to, åpne fjellporten og stans Flammefyrsten.
+Snakk med Bestemor Tora, finn naturvesenene i skogen, bli venn med minst to, åpne fjellporten og ro ned Flammefyrsten. Vanlig seier er alltid mulig. Samler du alle tre glødesporene og svekker Fyrsten til 25 % HP, våkner **Fjellroglasset** og åpner en egen vennskapsavslutning.
 
 Tre valgfrie glødespor er gjemt i skogen og hulen. De gir erfaring, flere villbær og et sterkere Roglass. Villbær kan brukes til taktisk helbredelse i kamp. Minikartet viser veien østover mot fjellets hjerte. Nye venner utover flokken på tre venter i leirreserven og kan byttes inn fra flokkspanelet.
+
+Etter begge avslutningene forblir verden åpen. Reisedagboken markerer hovedhistorien som fullført, NPC-ene reagerer på utfallet, og Sporboka viser oppdaget-/vennestatus for alle sju vesener. Hvis Flammefyrsten først beseires, kan vennskapsprøven forsøkes igjen ved fjellets hjerte.
 
 ## Teknikk
 
