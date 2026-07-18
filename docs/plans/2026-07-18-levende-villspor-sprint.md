@@ -207,5 +207,5 @@ const ROAMER_ZONES={
 - [x] Miljøeffekter respekterer reduced motion og påvirker ikke UI.
 - [x] Ingen transient state finnes i `villspor-save-v1`.
 - [x] Gamle lagringer og begge avslutninger fungerer.
-- [ ] Chromium, WebKit og axe er grønne lokalt og offentlig.
+- [x] Chromium, WebKit og axe er grønne lokalt og offentlig.
 - [x] Review er ferdig før release og ZIP.
