@@ -37,7 +37,11 @@ Etter begge avslutningene forblir verden åpen. Reisedagboken markerer hovedhist
 
 ## Teknikk
 
-Ren HTML5 Canvas, CSS og JavaScript uten byggetrinn. `game-core.js` inneholder datamodell og testbar kampmotor. Sju originale, lokalt lagrede SVG-illustrasjoner brukes i kamp, flokk og leirreserve, med programmatisk fallback dersom en fil ikke kan lastes. Mobilkontrollene bruker Pointer Events og blokkerer tekstmarkering, touch-callout og kontekstmeny bare på kontrollområdet. Fremdrift lagres lokalt i nettleseren.
+Ren HTML5 Canvas, CSS og JavaScript uten byggetrinn. `game-core.js` inneholder datamodell og testbar kampmotor. Sju originale, lokalt lagrede SVG-illustrasjoner brukes i kamp, flokk og leirreserve, med programmatisk fallback dersom en fil ikke kan lastes. Mobilkontrollene bruker Pointer Events og blokkerer tekstmarkering, touch-callout og kontekstmeny bare på kontrollområdet. Fremdrift lagres lokalt i nettleseren. Lokalt vendoret [ZzFXMicro](https://github.com/KilledByAPixel/ZzFX) (MIT) gir navngitte spilllyder med oscillator-fallback.
+
+### Utviklerverktøy
+
+Åpne `http://127.0.0.1:8770/?debug=1` for et sesjonsbasert balansepanel. Det kan justere spillerfart, møtesjanse, lydnivå og angrepsstyrke, teste lyder, helbrede flokken og legge til et testbær. Panelet lastes uten produksjonsfunksjon når parameteren mangler og skriver aldri tuning til lagringen.
 
 ## Tester
 
@@ -46,6 +50,9 @@ npm install
 npm test
 # Med lokal server på port 8770:
 npm run test:e2e
+npm run test:e2e:webkit
+npm run test:a11y
+npm run test:a11y:webkit
 ```
 
-`BASE_URL` og `QA_OUT` kan overstyres for å teste en publisert versjon og lagre skjermbilder et annet sted.
+`BASE_URL`, `QA_OUT` og `BROWSER=chromium|webkit` kan overstyres for å teste en publisert versjon og lagre skjermbilder et annet sted. Kommandoene er klare til å brukes i en CI-matrise når GitHub-tokenet har `workflow`-rettighet.

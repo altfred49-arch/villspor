@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import AxeBuilder from '@axe-core/playwright';
+import {chromium,webkit} from 'playwright';
+
+const browserName=process.env.BROWSER||'chromium',browserType={chromium,webkit}[browserName];
+if(!browserType)throw new Error(`Ukjent BROWSER: ${browserName}`);
+const base=process.env.BASE_URL||'http://127.0.0.1:8770/';
+const browser=await browserType.launch({headless:true});
+const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true});
+const page=await context.newPage();
+const runtimeErrors=[];
+page.on('pageerror',e=>runtimeErrors.push(e.message));
+page.on('console',m=>{if(m.type()==='error')runtimeErrors.push(m.text());});
+page.on('response',r=>{if(r.status()>=400)runtimeErrors.push(`http ${r.status()}: ${r.url()}`);});
+await page.goto(base,{waitUntil:'networkidle'});
+const tags=['wcag2a','wcag2aa','wcag21a','wcag21aa'];
+async function scan(state){const result=await new AxeBuilder({page}).withTags(tags).analyze();return result.violations.map(v=>({state,id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target.join(' '))}));}
+const violations=[];
+violations.push(...await scan('tittel'));
+await page.evaluate(()=>VillsporDebug.forceWorld());
+violations.push(...await scan('verden'));
+await page.click('#mobileTeam');
+violations.push(...await scan('flokk'));
+await page.click('[data-close="teamPanel"]');
+await page.evaluate(()=>VillsporDebug.startBattle('kullvinge',3,false));
+violations.push(...await scan('kamp'));
+assert.deepEqual(runtimeErrors,[]);
+assert.deepEqual(violations,[]);
+console.log(JSON.stringify({browser:browserName,states:4,violations:0},null,2));
+await browser.close();

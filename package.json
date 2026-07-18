@@ -3,9 +3,13 @@
   "private": true,
   "scripts": {
     "test": "node tests.mjs",
-    "test:e2e": "node e2e.mjs"
+    "test:e2e": "node e2e.mjs",
+    "test:e2e:webkit": "BROWSER=webkit QA_OUT=qa-webkit node e2e.mjs",
+    "test:a11y": "node a11y.mjs",
+    "test:a11y:webkit": "BROWSER=webkit node a11y.mjs"
   },
   "devDependencies": {
-    "playwright": "^1.55.0"
+    "@axe-core/playwright": "^4.12.1",
+    "playwright": "^1.61.1"
   }
 }
