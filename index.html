@@ -59,17 +59,29 @@
         <h3>🌲 Leirreserven</h3>
         <p class="panel-hint">Trykk «Bytt inn» for å bytte med flokkens leder.</p>
         <div id="reserveList"></div>
-        <div class="stats-row"><span>Oppdaget <b id="seenCount">0</b>/7</span><span>Venner <b id="caughtCount">0</b>/7</span></div>
+        <div class="stats-row"><span>Oppdaget <b id="seenCount">0</b>/10</span><span>Venner <b id="caughtCount">0</b>/10</span></div>
         <div class="stats-row inventory-row"><span>🫐 Villbær <b id="berryCount">0</b></span><span>✦ Glødespor <b id="relicCount">0</b>/3</span></div>
+        <div class="stats-row material-row"><span>🪵 <b id="woodCount">0</b></span><span>💎 <b id="crystalCount">0</b></span><span>🌿 <b id="herbCount">0</b></span></div>
+        <button id="teamBaseBtn" class="primary">🏕️ FURULY BASECAMP</button>
         <button id="saveBtn" class="secondary">LAGRE NÅ</button>
+      </section>
+
+      <section id="basePanel" class="side-panel hidden" aria-labelledby="baseTitle">
+        <div class="panel-head"><h2 id="baseTitle">Furuly Basecamp</h2><button data-close="basePanel" aria-label="Lukk basecamp">×</button></div>
+        <p class="panel-hint">Bygg opp leiren med funn fra ekspedisjoner. Reservevenner kan bemanne ett bygg hver.</p>
+        <div id="baseResources" class="stats-row material-row"></div>
+        <div id="baseList"></div>
+        <div class="base-unlock"><b>🌊 Ruten mot Fjordbygda</b><p id="fjordUnlockText"></p></div>
+        <button id="baseTeamBtn" class="secondary">← TILBAKE TIL FLOKKEN</button>
       </section>
 
       <section id="questPanel" class="side-panel hidden">
         <div class="panel-head"><h2>Reisedagbok</h2><button data-close="questPanel" aria-label="Lukk reisedagbok">×</button></div>
         <div id="questList"></div>
         <h3>🐾 Sporboka</h3>
-        <p class="panel-hint">Oppdag spor og bli venn med alle sju naturvesenene.</p>
+        <p class="panel-hint">Oppdag spor, finn naturformer og bli venn med alle ti naturvesenene.</p>
         <div id="bestiaryList" class="bestiary-grid"></div>
+        <button id="questBaseBtn" class="primary">🏕️ ÅPNE BASECAMP</button>
         <h3>Kontroller</h3>
         <p>Flytt: piltaster / WASD<br>Samhandle: Enter / E / A-knappen<br>Flokk: F · Pause: P / Esc</p>
       </section>
