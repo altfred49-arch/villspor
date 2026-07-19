@@ -32,7 +32,7 @@ Baseline: `bdde2cc` (Levende Villspor)
 | Kontroll | Chromium | WebKit |
 |---|---:|---:|
 | Statiske tester | 51/51 | Motoruavhengig |
-| E2E-assertions | 256/256 | 256/256 |
+| E2E-assertions | 265/265 | 265/265 |
 | E2E runtime-/console-feil | 0 | 0 |
 | axe-states | 7 | 7 |
 | axe-brudd | 0 | 0 |
@@ -72,6 +72,10 @@ Kontrollert i full desktop, 390×844 mobilportrett og kompakt landskap:
 - Ingen horisontal overflow i base-, flokk- eller Sporbokpanel.
 - Kampmenyen ligger innenfor Canvas i portrett og landskap.
 - Reduced motion fryser roamerbevegelse og pulsering dynamisk.
+- Fokus flyttes til åpnet panel, bevares etter Basecamp-handlinger og returneres til en synlig åpner ved lukking.
+- Tegnesløyfen suspenderes bak fullskjermspaneler for redusert mobil batteri- og varmebelastning.
+- Materialer har tekstlige navn i tillegg til dekorative symboler.
+- `0 HP` bevares ved lasting og naturformvalg; trenerbelønninger telles nøyaktig én gang.
 
 ## Releasekrav
 
